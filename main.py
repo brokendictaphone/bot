@@ -82,7 +82,7 @@ async def on_startup(_):  # служебное сообщение
 async def command_start(message: types.Message):
     global FrstMessFlag
     id = message.chat.id
-    if FrstMessFlag == False:
+    if not FrstMessFlag:
         await del_mess(id)  # удаление предыдущего сообщения
     msg = await bot.send_message(message.from_user.id, f'Привет, {message.chat.first_name.title()}!'
                                                  f' Я бот для составления списков, для того чтобы добавить что-нибудь'
@@ -90,12 +90,12 @@ async def command_start(message: types.Message):
                                                  f' Чтобы удалить что-то из списка, нажми на кнопку с названием этого что-то.'
                                                  f' Пожалуй, это всё, что нужно знать о моей работе))', reply_markup=kb_start)
     msg_id_write(msg, id)  # записывает айди сообщения в БД
-    await message.delete()# удалить сообщение пользователя
+    await message.delete()  # удалить сообщение пользователя
     FrstMessFlag = False
 
 
-@dp.message_handler(Text(equals='показать список')) # ПОКАЗ СПИСКА
-async def add_button(message : types.Message):
+@dp.message_handler(Text(equals='показать список'))  # ПОКАЗ СПИСКА
+async def add_button(message: types.Message):
     id = message.chat.id
     await del_mess(id)  # удаление предыдущего сообщения
     flag = check_data_base(id)
@@ -110,8 +110,8 @@ async def add_button(message : types.Message):
         await message.delete()  # удалить сообщение пользователя
 
 
-@dp.message_handler() # добавление в список
-async def insert_item(message : types.Message):
+@dp.message_handler()  # добавление в список
+async def insert_item(message: types.Message):
     id = message.chat.id
     await del_mess(id)  # удаление предыдущего сообщения
     data_base = sq.connect('ListBotBase.db')  # добавление данных в список дел
@@ -125,13 +125,13 @@ async def insert_item(message : types.Message):
     else:
         cur.execute("""INSERT INTO things VALUES(?,?)""", (id, message.text))  # добавление данных в список дел
         data_base.commit()  # подтверждение действий
-        msg = await message.answer(f'Вот и добавили "{message.text}" в список дел',reply_markup=kb_start)
+        msg = await message.answer(f'Вот и добавили "{message.text}" в список дел', reply_markup=kb_start)
         msg_id_write(msg, id)  # записывает айди сообщения в БД
         await message.delete()  # удалить сообщение пользователя
 
 
 @dp.callback_query_handler()
-async def del_thing(callback : types.CallbackQuery):
+async def del_thing(callback: types.CallbackQuery):
     id = callback.from_user.id  # посмотреть ID через коллбэки
     data_base = sq.connect('ListBotBase.db')  # связь с БД
     cur = data_base.cursor()
@@ -151,5 +151,5 @@ async def del_thing(callback : types.CallbackQuery):
         msg_id_write(msg, id)  # записывает айди сообщения в БД
 
 
-executor.start_polling(dp, skip_updates=True, on_startup=on_startup) # skip_updates - бот не будет отвечать на сообщения, которые были присланы,
+executor.start_polling(dp, skip_updates=True, on_startup=on_startup)  # skip_updates - бот не будет отвечать на сообщения, которые были присланы,
                                             # когда он был в офлайне
