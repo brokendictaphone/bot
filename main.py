@@ -9,7 +9,7 @@ import sqlite3 as sq
 
 FrstMessFlag = True   # в значении Тру - первое сообщение, в значении Фалс - все последующие
 
-data_base = sq.connect('ListBotBase.db')
+data_base = sq.connect('ListBotBase2.db')
 cur = data_base.cursor()
 cur.execute("""CREATE TABLE IF NOT EXISTS lists (
     user_id INT,
