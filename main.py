@@ -54,7 +54,7 @@ def view_list(id):
 
 
 def view_user_lists(id):
-    """создает и возвращет список списков в виде клавиатуры"""
+    """создает и возвращет пользовательские списки в виде клавиатуры"""
     list_kb = InlineKeyboardMarkup()  # создание клавиатуры списка
     data_base = sq.connect('ListBotBase2.db')  # связь с БД
     cur = data_base.cursor()
