@@ -13,7 +13,7 @@ data_base = sq.connect('ListBotBase.db')
 cur = data_base.cursor()
 cur.execute("""CREATE TABLE IF NOT EXISTS lists (
     user_id INT,
-    lists NULL,
+    list NULL,
     thing TXT
 )""")   # создание таблицы в базе данных если она ещё не создана, в скобках указаны столбцы и тип данных в них
 
