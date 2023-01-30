@@ -33,8 +33,8 @@ def check_data_base(id):
     flag = False
     data_base = sq.connect('ListBotBase2.db')  # связь с БД
     cur = data_base.cursor()
-    for things in cur.execute(f"SELECT thing FROM things WHERE user_id = {id}"):  # вывод данных из БД(выбрать всё из таблицы пользователи
-        check_list.append(things)
+    for lists in cur.execute(f"SELECT list FROM lists WHERE user_id = {id}"):  # вывод данных из БД(выбрать всё из таблицы пользователи
+        check_list.append(lists)
     if check_list:
         flag = True
     check_list.clear()
@@ -51,6 +51,19 @@ def view_list(id):
             b = InlineKeyboardButton(thing, callback_data=thing)
             list_kb.row(b)
     return list_kb
+
+
+def view_user_lists(id):
+    """создает и возвращет список списков в виде клавиатуры"""
+    list_kb = InlineKeyboardMarkup()  # создание клавиатуры списка
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
+    cur = data_base.cursor()
+    for lists in cur.execute(f"SELECT list FROM lists WHERE user_id = {id}"):  # вывод данных из БД(выбрать всё из таблицы пользователи)
+        for list in lists:
+            b = InlineKeyboardButton(list, callback_data=list)
+            list_kb.row(b)
+    return list_kb
+
 
 
 def msg_id_write(msg, id):
@@ -95,11 +108,30 @@ async def command_start(message: types.Message):
     await message.delete()  # удалить сообщение пользователя
     FrstMessFlag = False
 
+
+@dp.message_handler(Text(equals='показать списки'))  # ПОКАЗ СПИСКА
+async def add_lists_button(message: types.Message):
+    id = message.chat.id
+    await del_mess(id)  # удаление предыдущего сообщения
+    flag = check_data_base(id)
+    if flag:
+        list_kb = view_user_lists(id)  # функция создает и возвращет списки пользователя в виде клавиатуры
+        msg = await message.answer('Актуальные списки: ', reply_markup=list_kb)
+        msg_id_write(msg, id)  # записывает айди сообщения в БД
+        await message.delete()  # удалить сообщение пользователя
+    else:
+        msg = await message.answer('Нечего показать-то! Ни одного списка не создано...', reply_markup=kb_start)
+        msg_id_write(msg, id)  # записывает айди сообщения в БД
+        await message.delete()  # удалить сообщение пользователя
+
+
 @dp.message_handler(Text(equals='создать список'))  # создание списка
 async def add_list(message: types.Message):
     global AddFlag  # флаг создания нового списка ( тру - создаем список, фалс - нет)
     await message.answer('Введите название нового списка: ')
     AddFlag = True
+
+
 
 @dp.message_handler()  # добавление нового списка в БД
 async def insert_list(message: types.Message):
@@ -116,25 +148,29 @@ async def insert_list(message: types.Message):
         await message.delete()  # удалить сообщение пользователя
         AddFlag = False
     else:
-        msg = await message.answer(f'Сначала нужно нажать кнопку "создать список"!', reply_markup=kb_start)
-        msg_id_write(msg, id)  # записывает айди сообщения в БД
-        await message.delete()  # удалить сообщение пользователя
+        if message.text == 'показать списки':
+            pass
+        else:
+            msg = await message.answer(f'Сначала нужно нажать кнопку "создать список"!', reply_markup=kb_start)
+            msg_id_write(msg, id)  # записывает айди сообщения в БД
+            await message.delete()  # удалить сообщение пользователя
 
 
-@dp.message_handler(Text(equals='показать список'))  # ПОКАЗ СПИСКА
-async def add_button(message: types.Message):
-    id = message.chat.id
-    await del_mess(id)  # удаление предыдущего сообщения
-    flag = check_data_base(id)
-    if flag:
-        list_kb = view_list(id)  # функция создает и возвращет список дел в виде клавиатуры
-        msg = await message.answer('Актуальный список: ', reply_markup=list_kb)
-        msg_id_write(msg, id)  # записывает айди сообщения в БД
-        await message.delete()  # удалить сообщение пользователя
-    else:
-        msg = await message.answer('Нечего показать-то! Список пока пуст...', reply_markup=kb_start)
-        msg_id_write(msg, id)  # записывает айди сообщения в БД
-        await message.delete()  # удалить сообщение пользователя
+#
+# @dp.message_handler(Text(equals='показать список'))  # ПОКАЗ СПИСКА
+# async def add_button(message: types.Message):
+#     id = message.chat.id
+#     await del_mess(id)  # удаление предыдущего сообщения
+#     flag = check_data_base(id)
+#     if flag:
+#         list_kb = view_list(id)  # функция создает и возвращет список дел в виде клавиатуры
+#         msg = await message.answer('Актуальный список: ', reply_markup=list_kb)
+#         msg_id_write(msg, id)  # записывает айди сообщения в БД
+#         await message.delete()  # удалить сообщение пользователя
+#     else:
+#         msg = await message.answer('Нечего показать-то! Список пока пуст...', reply_markup=kb_start)
+#         msg_id_write(msg, id)  # записывает айди сообщения в БД
+#         await message.delete()  # удалить сообщение пользователя
 
 
 # @dp.message_handler()  # добавление в список

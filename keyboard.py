@@ -1,7 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 b1 = KeyboardButton('создать список')
-b2 = KeyboardButton('показать список')
+b2 = KeyboardButton('показать списки')
 b3 = KeyboardButton('/help')
 kb_start = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
 # клавиатура создается(кнопки будут изменяться под надписи, клавиатура будет удаляться после использования)
