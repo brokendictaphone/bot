@@ -1,1 +1,3 @@
-config = 'какой-то-длинный-номер-выданный-ботфазером'
+config = '5435914757:AAHmFLEHDiRUQFV5g_50vfc4GnPp3lKKw0g'
+
+
