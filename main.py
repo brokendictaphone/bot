@@ -30,7 +30,7 @@ def check_data_base(id):
     """проверяет, есть ли записи у пользователя в БД"""
     check_list = []
     flag = False
-    data_base = sq.connect('ListBotBase.db')  # связь с БД
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
     cur = data_base.cursor()
     for things in cur.execute(f"SELECT thing FROM things WHERE user_id = {id}"):  # вывод данных из БД(выбрать всё из таблицы пользователи
         check_list.append(things)
@@ -43,7 +43,7 @@ def check_data_base(id):
 def view_list(id):
     """создает и возвращет список дел в виде клавиатуры"""
     list_kb = InlineKeyboardMarkup()  # создание клавиатуры списка
-    data_base = sq.connect('ListBotBase.db')  # связь с БД
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
     cur = data_base.cursor()
     for things in cur.execute(f"SELECT thing FROM things WHERE user_id = {id}"):  # вывод данных из БД(выбрать всё из таблицы пользователи)
         for thing in things:
@@ -54,7 +54,7 @@ def view_list(id):
 
 def msg_id_write(msg, id):
     """записывает id сообщения в БД"""
-    data_base = sq.connect('ListBotBase.db')  # добавление данных в список дел
+    data_base = sq.connect('ListBotBase2.db')  # добавление данных в список дел
     cur = data_base.cursor()
     cur.execute(f"SELECT msg FROM msg_ids WHERE user_id = {id} ")  # выбор значения
     if cur.fetchone():
@@ -68,7 +68,7 @@ def msg_id_write(msg, id):
 
 async def del_mess(id):
     """удаляет сообщения бота по месседж айди"""
-    data_base = sq.connect('ListBotBase.db')  # связь с БД
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
     cur = data_base.cursor()
     for msg_id in cur.execute(f"SELECT msg FROM msg_ids WHERE user_id = {id}"):
         await bot.delete_message(id, msg_id[0])
@@ -115,7 +115,7 @@ async def add_button(message: types.Message):
 async def insert_item(message: types.Message):
     id = message.chat.id
     await del_mess(id)  # удаление предыдущего сообщения
-    data_base = sq.connect('ListBotBase.db')  # добавление данных в список дел
+    data_base = sq.connect('ListBotBase2.db')  # добавление данных в список дел
     cur = data_base.cursor()
     if '"' in message.text:
         msg = await message.answer('Нельзя использовать кавычки! Введи без них')
@@ -134,7 +134,7 @@ async def insert_item(message: types.Message):
 @dp.callback_query_handler()
 async def del_thing(callback: types.CallbackQuery):
     id = callback.from_user.id  # посмотреть ID через коллбэки
-    data_base = sq.connect('ListBotBase.db')  # связь с БД
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
     cur = data_base.cursor()
     cur.execute(f'DELETE FROM things WHERE thing = "{callback.data}" AND user_id = {id}')
     data_base.commit()
