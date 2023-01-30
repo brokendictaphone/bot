@@ -8,6 +8,7 @@ import sqlite3 as sq
 
 
 FrstMessFlag = True   # в значении Тру - первое сообщение, в значении Фалс - все последующие
+AddFlag = False  # флаг создания нового списка ( тру - создаем список, фалс - нет)
 
 data_base = sq.connect('ListBotBase2.db')
 cur = data_base.cursor()
@@ -94,6 +95,31 @@ async def command_start(message: types.Message):
     await message.delete()  # удалить сообщение пользователя
     FrstMessFlag = False
 
+@dp.message_handler(Text(equals='создать список'))  # создание списка
+async def add_list(message: types.Message):
+    global AddFlag  # флаг создания нового списка ( тру - создаем список, фалс - нет)
+    await message.answer('Введите название нового списка: ')
+    AddFlag = True
+
+@dp.message_handler()  # добавление нового списка в БД
+async def insert_list(message: types.Message):
+    id = message.chat.id
+    global AddFlag  # флаг создания нового списка ( тру - создаем список, фалс - нет)
+    await del_mess(id)  # удаление предыдущего сообщения
+    data_base = sq.connect('ListBotBase2.db')
+    cur = data_base.cursor()
+    if AddFlag:
+        cur.execute("""INSERT INTO lists VALUES(?,?,?)""", (id, message.text, None))  # добавление нового списка
+        data_base.commit()  # подтверждение действий
+        msg = await message.answer(f'Вот и создан список "{message.text}"', reply_markup=kb_start)
+        msg_id_write(msg, id)  # записывает айди сообщения в БД
+        await message.delete()  # удалить сообщение пользователя
+        AddFlag = False
+    else:
+        msg = await message.answer(f'Сначала нужно нажать кнопку "создать список"!', reply_markup=kb_start)
+        msg_id_write(msg, id)  # записывает айди сообщения в БД
+        await message.delete()  # удалить сообщение пользователя
+
 
 @dp.message_handler(Text(equals='показать список'))  # ПОКАЗ СПИСКА
 async def add_button(message: types.Message):
@@ -111,24 +137,24 @@ async def add_button(message: types.Message):
         await message.delete()  # удалить сообщение пользователя
 
 
-@dp.message_handler()  # добавление в список
-async def insert_item(message: types.Message):
-    id = message.chat.id
-    await del_mess(id)  # удаление предыдущего сообщения
-    data_base = sq.connect('ListBotBase2.db')  # добавление данных в список дел
-    cur = data_base.cursor()
-    if '"' in message.text:
-        msg = await message.answer('Нельзя использовать кавычки! Введи без них')
-        msg_id_write(msg, id)  # записывает айди сообщения в БД
-    elif len(message.text) > 25:
-        msg = await message.answer('Слишком длинно, не возьмусь')
-        msg_id_write(msg, id)  # записывает айди сообщения в БД
-    else:
-        cur.execute("""INSERT INTO things VALUES(?,?)""", (id, message.text))  # добавление данных в список дел
-        data_base.commit()  # подтверждение действий
-        msg = await message.answer(f'Вот и добавили "{message.text}" в список дел', reply_markup=kb_start)
-        msg_id_write(msg, id)  # записывает айди сообщения в БД
-        await message.delete()  # удалить сообщение пользователя
+# @dp.message_handler()  # добавление в список
+# async def insert_item(message: types.Message):
+#     id = message.chat.id
+#     await del_mess(id)  # удаление предыдущего сообщения
+#     data_base = sq.connect('ListBotBase2.db')  # добавление данных в список дел
+#     cur = data_base.cursor()
+#     if '"' in message.text:
+#         msg = await message.answer('Нельзя использовать кавычки! Введи без них')
+#         msg_id_write(msg, id)  # записывает айди сообщения в БД
+#     elif len(message.text) > 25:
+#         msg = await message.answer('Слишком длинно, не возьмусь')
+#         msg_id_write(msg, id)  # записывает айди сообщения в БД
+#     else:
+#         cur.execute("""INSERT INTO things VALUES(?,?)""", (id, message.text))  # добавление данных в список дел
+#         data_base.commit()  # подтверждение действий
+#         msg = await message.answer(f'Вот и добавили "{message.text}" в список дел', reply_markup=kb_start)
+#         msg_id_write(msg, id)  # записывает айди сообщения в БД
+#         await message.delete()  # удалить сообщение пользователя
 
 
 @dp.callback_query_handler()
