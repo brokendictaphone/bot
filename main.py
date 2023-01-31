@@ -58,12 +58,19 @@ def view_user_lists(id):
     list_kb = InlineKeyboardMarkup()  # создание клавиатуры списка
     data_base = sq.connect('ListBotBase2.db')  # связь с БД
     cur = data_base.cursor()
-    for lists in cur.execute(f"SELECT list FROM lists WHERE user_id = {id}"):  # вывод данных из БД(выбрать всё из таблицы пользователи)
-        for list in lists:
-            b = InlineKeyboardButton(list, callback_data=list)
+    for list in cur.execute(f"SELECT list FROM lists WHERE user_id = {id}"):  # вывод данных из БД(выбрать всё из таблицы пользователи)
+        for tpl in list:
+            b = InlineKeyboardButton(tpl, callback_data=tpl)
             list_kb.row(b)
     return list_kb
 
+def check_lists_numb(id):
+    """проверка количества списков"""
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
+    cur = data_base.cursor()
+    res = cur.execute(f"SELECT list FROM lists WHERE user_id = {id}") # вывод данных из БД(выбрать всё из таблицы пользователи)
+    length = len(res.fetchall())
+    return length
 
 
 def msg_id_write(msg, id):
@@ -127,9 +134,16 @@ async def add_lists_button(message: types.Message):
 
 @dp.message_handler(Text(equals='создать список'))  # создание списка
 async def add_list(message: types.Message):
+    id = message.chat.id
+    list_len = check_lists_numb(id)
     global AddFlag  # флаг создания нового списка ( тру - создаем список, фалс - нет)
-    await message.answer('Введите название нового списка: ')
-    AddFlag = True
+    if list_len < 3:
+        await message.answer('Введите название нового списка: ')
+        AddFlag = True
+    else:
+        await message.answer('Нельзя создать больше 3 списков!',reply_markup=kb_start)
+
+
 
 
 
