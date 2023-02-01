@@ -8,7 +8,8 @@ import sqlite3 as sq
 
 
 FrstMessFlag = True   # в значении Тру - первое сообщение, в значении Фалс - все последующие
-AddFlag = False  # флаг создания нового списка ( тру - создаем список, фалс - нет)
+AddFlag = 0 # флаг создания нового списка ( тру - создаем список, фалс - нет)
+
 
 data_base = sq.connect('ListBotBase2.db')
 cur = data_base.cursor()
@@ -23,8 +24,15 @@ cur.execute("""CREATE TABLE IF NOT EXISTS msg_ids (
     msg NULL
 )""")   # создание таблицы с мессадж айди, в скобках указаны столбцы и тип данных в них
 
+cur.execute("""CREATE TABLE IF NOT EXISTS flags (
+    user_id INT,
+    AddFlag NULL
+)""")   # создание таблицы флагов, в скобках указаны столбцы и тип данных в них
+
 data_base.commit()  # подтверждение действий
 data_base.close()  # закрытие ДБ
+
+
 
 
 def check_data_base(id):
@@ -82,7 +90,20 @@ def msg_id_write(msg, id):
         cur.execute(f'UPDATE msg_ids SET msg = {msg.message_id} WHERE user_id = {id}')
     else:
         cur.execute("""INSERT INTO msg_ids(user_id,msg) VALUES(?,?)""",
-                    (id, msg.message_id))  # добавление данных в список дел
+                    (id, msg.message_id))  # добавление данных
+    data_base.commit()  # подтверждение действий
+    data_base.close()  # закрытие ДБ
+
+def AddFlag_write(AddFlag, id):
+    """записывает AddFlag в БД"""
+    data_base = sq.connect('ListBotBase2.db')  # добавление данных в список дел
+    cur = data_base.cursor()
+    cur.execute(f"SELECT AddFlag FROM flags WHERE user_id = {id} ")  # выбор значения
+    if cur.fetchone():
+        cur.execute(f'UPDATE flags SET AddFlag = {AddFlag} WHERE user_id = {id}')
+    else:
+        cur.execute("""INSERT INTO flags(user_id,AddFlag) VALUES(?,?)""",
+                    (id, AddFlag))  # добавление данных
     data_base.commit()  # подтверждение действий
     data_base.close()  # закрытие ДБ
 
@@ -103,6 +124,7 @@ async def on_startup(_):  # служебное сообщение
 @dp.message_handler(commands=['start', 'help'])  # команда старт и кнопки
 async def command_start(message: types.Message):
     global FrstMessFlag
+    AddFlag = 0  # флаг создания нового списка
     id = message.chat.id
     if not FrstMessFlag:
         await del_mess(id)  # удаление предыдущего сообщения
@@ -112,6 +134,7 @@ async def command_start(message: types.Message):
                                                  f' Чтобы удалить что-то из списка, нажми на кнопку с названием этого что-то.'
                                                  f' Пожалуй, это всё, что нужно знать о моей работе))', reply_markup=kb_start)
     msg_id_write(msg, id)  # записывает айди сообщения в БД
+    AddFlag_write(AddFlag, id)  # запись AddFlag в БД
     await message.delete()  # удалить сообщение пользователя
     FrstMessFlag = False
 
@@ -136,12 +159,15 @@ async def add_lists_button(message: types.Message):
 async def add_list(message: types.Message):
     id = message.chat.id
     list_len = check_lists_numb(id)
-    global AddFlag  # флаг создания нового списка ( тру - создаем список, фалс - нет)
     if list_len < 3:
         await message.answer('Введите название нового списка: ')
-        AddFlag = True
+        AddFlag = 1
+        AddFlag_write(AddFlag, id)  # запись AddFlag в БД
     else:
         await message.answer('Нельзя создать больше 3 списков!',reply_markup=kb_start)
+        AddFlag = 0
+        AddFlag_write(AddFlag, id)  # запись AddFlag в БД
+
 
 
 
@@ -150,17 +176,18 @@ async def add_list(message: types.Message):
 @dp.message_handler()  # добавление нового списка в БД
 async def insert_list(message: types.Message):
     id = message.chat.id
-    global AddFlag  # флаг создания нового списка ( тру - создаем список, фалс - нет)
     await del_mess(id)  # удаление предыдущего сообщения
     data_base = sq.connect('ListBotBase2.db')
     cur = data_base.cursor()
-    if AddFlag:
+    AddFlag = cur.execute(f"SELECT AddFlag FROM flags WHERE user_id = {id}").fetchone()[0]
+    if AddFlag == 1:
         cur.execute("""INSERT INTO lists VALUES(?,?,?)""", (id, message.text, None))  # добавление нового списка
         data_base.commit()  # подтверждение действий
         msg = await message.answer(f'Вот и создан список "{message.text}"', reply_markup=kb_start)
         msg_id_write(msg, id)  # записывает айди сообщения в БД
         await message.delete()  # удалить сообщение пользователя
-        AddFlag = False
+        AddFlag = 0
+        AddFlag_write(AddFlag, id)  # запись AddFlag в БД
     else:
         if message.text == 'показать списки':
             pass
