@@ -3,8 +3,8 @@ from aiogram import types
 from keyboard import kb_start
 from create_bot import dp
 from funct import *
-from AddList import AddListsHandlers
-
+from handlers import AddListsHandlers
+from handlers.AddListsHandlers import AddFlag_write
 
 FrstMessFlag = True   # в значении Тру - первое сообщение, в значении Фалс - все последующие
 AddFlag = 0  # флаг создания нового списка ( тру - создаем список, фалс - нет)
