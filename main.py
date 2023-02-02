@@ -27,15 +27,12 @@ data_base.close()  # закрытие ДБ
 
 def check_data_base(id):
     """проверяет, есть ли записи у пользователя в БД"""
-    check_list = []
     flag = False
     data_base = sq.connect('ListBotBase.db')  # связь с БД
     cur = data_base.cursor()
-    for things in cur.execute(f"SELECT thing FROM things WHERE user_id = {id}"):  # вывод данных из БД(выбрать всё из таблицы пользователи
-        check_list.append(things)
-    if check_list:
+    res = cur.execute(f"SELECT thing FROM things WHERE user_id = {id}")  # вывод данных из БД(выбрать всё из таблицы пользователи
+    if len(res.fetchall()) > 0:
         flag = True
-    check_list.clear()
     return flag
 
 
