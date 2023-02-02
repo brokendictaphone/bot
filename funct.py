@@ -14,6 +14,7 @@ def view_user_lists(id):
             list_kb.row(b)
     return list_kb
 
+
 def check_lists_numb(id):
     """проверка количества списков"""
     data_base = sq.connect('ListBotBase2.db')  # связь с БД

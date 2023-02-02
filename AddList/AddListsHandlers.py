@@ -1,11 +1,10 @@
 from aiogram.dispatcher.filters import Text
 from aiogram import types, Dispatcher
 from keyboard import kb_start
-from create_bot import dp
-from lists_func import *
+from funct import *
 import sqlite3 as sq
 
-@dp.message_handler(Text(equals='создать список'))  # создание списка
+
 async def add_list(message: types.Message):
     id = message.chat.id
     list_len = check_lists_numb(id)
@@ -19,7 +18,7 @@ async def add_list(message: types.Message):
         AddFlag_write(AddFlag, id)  # запись AddFlag в БД
 
 
-@dp.message_handler()  # добавление нового списка в БД
+
 async def insert_list(message: types.Message):
     id = message.chat.id
     await del_mess(id)  # удаление предыдущего сообщения
@@ -43,7 +42,6 @@ async def insert_list(message: types.Message):
             await message.delete()  # удалить сообщение пользователя
 
 
-@dp.message_handler(Text(equals='показать списки'))  # ПОКАЗ СПИСКА
 async def add_lists_button(message: types.Message):
     id = message.chat.id
     await del_mess(id)  # удаление предыдущего сообщения
@@ -61,5 +59,5 @@ async def add_lists_button(message: types.Message):
 
 def register_AddLIst_handlers(dp: Dispatcher):
     dp.register_message_handler(add_list, (Text(equals='создать список')))  # создание списка
-    dp.register_message_handler(insert_list, Text)  # добавление нового списка в БД
     dp.register_message_handler(add_lists_button, (Text(equals='показать списки')))   # ПОКАЗ СПИСКА
+    dp.register_message_handler(insert_list)  # добавление нового списка в БД
