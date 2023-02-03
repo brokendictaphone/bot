@@ -26,13 +26,10 @@ def msg_id_write(msg, id):
 
 def check_data_base(id):
     """проверяет, есть ли записи у пользователя в БД"""
-    check_list = []
     flag = False
     data_base = sq.connect('ListBotBase2.db')  # связь с БД
     cur = data_base.cursor()
-    for lists in cur.execute(f"SELECT list FROM lists WHERE user_id = {id}"):  # вывод данных из БД(выбрать всё из таблицы пользователи
-        check_list.append(lists)
-    if check_list:
+    res = cur.execute(f"SELECT list FROM lists WHERE user_id = {id}")  # вывод данных из БД(выбрать всё из таблицы пользователи
+    if len(res.fetchall()) > 0:
         flag = True
-    check_list.clear()
     return flag

@@ -3,6 +3,7 @@ from aiogram import types, Dispatcher
 from keyboard import kb_start
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from funct import *
+from things_add import *
 import sqlite3 as sq
 
 def AddFlag_write(AddFlag, id):
@@ -38,6 +39,18 @@ def check_lists_numb(id):
     res = cur.execute(f"SELECT list FROM lists WHERE user_id = {id}") # вывод данных из БД(выбрать всё из таблицы пользователи)
     length = len(res.fetchall())
     return length
+
+
+def check_user_list(id, list_name):
+    """проверяет, есть ли пункты в пользовательском списке"""
+    flag = False
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
+    cur = data_base.cursor()
+    res = cur.execute("SELECT thing FROM lists WHERE user_id = ? AND list = ?", (id, list_name))  # вывод данных из БД(выбрать всё из таблицы пользователи
+    if res.fetchall()[0][0] != None:  # если в списке есть хотя бы одна не пустая запись
+        flag = True
+    return flag
+
 
 async def add_list(message: types.Message):  # создание списка
     id = message.chat.id
@@ -90,7 +103,22 @@ async def add_lists_button(message: types.Message):
         await message.delete()  # удалить сообщение пользователя
 
 
+
+async def view_thing_in_list(callback: types.CallbackQuery):
+    id = callback.from_user.id  # посмотреть ID через коллбэки
+    flag = check_user_list(id, callback.data)
+    if flag:
+        list_kb = view_list(id, callback.data)  # функция создает и возвращет пользовательские списки в виде клавиатуры
+        msg = await bot.send_message(callback.from_user.id, 'Список: ', reply_markup=list_kb)
+        msg_id_write(msg, id)  # записывает айди сообщения в БД
+    else:
+        await callback.answer('Похоже, список пуст.', show_alert=True)
+        msg = await bot.send_message(callback.from_user.id, 'Продолжим?', reply_markup=kb_start)
+        msg_id_write(msg, id)  # записывает айди сообщения в БД
+
+
 def register_AddLIst_handlers(dp: Dispatcher):
     dp.register_message_handler(add_list, (Text(equals='создать список')))  # создание списка
     dp.register_message_handler(add_lists_button, (Text(equals='показать списки')))   # ПОКАЗ СПИСКА
     dp.register_message_handler(insert_list)  # добавление нового списка в БД
+    dp.register_callback_query_handler(view_thing_in_list)  # просмотр пунктов пользовательского списка
