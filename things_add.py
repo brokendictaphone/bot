@@ -9,8 +9,11 @@ def view_list(id, list_name):
     cur = data_base.cursor()
     for things in cur.execute("SELECT thing FROM lists WHERE user_id = ? AND list = ?", (id, list_name)):  # вывод данных из БД(выбрать всё из таблицы пользователи)
         for thing in things:
-            b = InlineKeyboardButton(thing, callback_data=thing)
-            list_kb.row(b)
+            if thing is None:  # "отфильтровывает" первый пустой пункт
+                continue
+            else:
+                b = InlineKeyboardButton(thing, callback_data=thing)
+                list_kb.row(b)
     return list_kb
 
 

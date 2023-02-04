@@ -59,4 +59,4 @@ async def command_start(message: types.Message):
 AddListsHandlers.register_AddLIst_handlers(dp)  # добавление пользовательских списков
 
 executor.start_polling(dp, skip_updates=True, on_startup=on_startup)  # skip_updates - бот не будет отвечать на сообщения, которые были присланы,
-                                            # когда он был в офлайне
+                                            # когда он был офлайн
