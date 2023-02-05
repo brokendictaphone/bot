@@ -41,6 +41,19 @@ def check_lists_numb(id):
     return length
 
 
+def list_or_thing(id, check_name):
+    """проверяет, входит ли запись в пользовательские списки"""
+    LoTFl = False
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
+    cur = data_base.cursor()
+    res = cur.execute(f"SELECT DISTINCT list FROM lists WHERE user_id = {id}") # вывод данных из БД(выбрать всё из таблицы пользователи)
+    for tpl in res.fetchall():
+        if tpl[0] == check_name:
+            LoTFl = True
+    return LoTFl
+
+
+
 def check_user_list(id, list_name):
     """проверяет, есть ли пункты в пользовательском списке"""
     flag = False
@@ -105,7 +118,10 @@ async def insert_smth(message: types.Message):
             cur.execute("""INSERT INTO lists VALUES(?,?,?)""",
                         (id, list_name, message.text))  # добавление данных в список дел
             data_base.commit()  # подтверждение действий
-            msg = await message.answer(f'Вот и добавили "{message.text}" в список', reply_markup=kb_start)
+            list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры
+            await message.answer(f'Вот и добавили "{message.text}" в список', reply_markup=list_kb)
+
+            msg = await message.answer(f'Что ещё нужно добавить в список?', reply_markup=kb_start)
             msg_id_write(msg, id)  # записывает айди сообщения в БД
             await message.delete()  # удалить сообщение пользователя
 
@@ -131,14 +147,31 @@ async def view_thing_in_list(callback: types.CallbackQuery):
     id = callback.from_user.id  # посмотреть ID через коллбэки
     await del_mess(id)  # удаление предыдущего сообщения
     flag = check_user_list(id, list_name)
-    if flag:
-        list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры
-        msg = await bot.send_message(callback.from_user.id, f'Список "{list_name}": ', reply_markup=list_kb)
-        msg_id_write(msg, id)  # записывает айди сообщения в БД
-    else:
-        await callback.answer('Похоже, список пуст.', show_alert=True)
-        msg = await bot.send_message(callback.from_user.id, 'Продолжим?', reply_markup=kb_start)
-        msg_id_write(msg, id)  # записывает айди сообщения в БД
+    LoTFl = list_or_thing(id, list_name)
+    if LoTFl:  # если list_name - пользовательский список
+        if flag:
+            list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры
+            msg = await bot.send_message(callback.from_user.id, f'Список "{list_name}": ', reply_markup=list_kb)
+            msg_id_write(msg, id)  # записывает айди сообщения в БД
+        else:
+            await callback.answer('Похоже, список пуст.', show_alert=True)
+            msg = await bot.send_message(callback.from_user.id, 'Напишите, что нужно добавить в список?', reply_markup=kb_start)
+            msg_id_write(msg, id)  # записывает айди сообщения в БД
+    else:   # если list_name - пункт в пользовательском списке(УДАЛЕНИЕ)
+        data_base = sq.connect('ListBotBase2.db')  # связь с БД
+        cur = data_base.cursor()
+        cur.execute(f'DELETE FROM lists WHERE thing = ? AND user_id = ?', (callback.data, id))
+        data_base.commit()
+        #await bot.delete_message(callback.from_user.id, callback.message.message_id)  # удаление предыдущего сообщения бота
+        flag = check_data_base(id)
+        if flag:
+            list_kb = view_list(id,list_name)  # функция создает и возвращет список дел в виде клавиатуры
+            msg = await bot.send_message(callback.from_user.id, 'Дельце-то сделано!', reply_markup=kb_start)
+            msg_id_write(msg, id)  # записывает айди сообщения в БД
+        else:
+            await callback.answer('Похоже, все дела переделаны. Мои поздравления!', show_alert=True)
+            msg = await bot.send_message(callback.from_user.id, 'Продолжим?', reply_markup=kb_start)
+            msg_id_write(msg, id)  # записывает айди сообщения в БД
 
 
 def register_AddLIst_handlers(dp: Dispatcher):
@@ -146,6 +179,6 @@ def register_AddLIst_handlers(dp: Dispatcher):
     dp.register_message_handler(add_lists_button, (Text(equals='показать списки')))   # ПОКАЗ СПИСКА
     dp.register_message_handler(insert_smth)  # добавление пользовательских списков и пунктов в них
     dp.register_callback_query_handler(view_thing_in_list)  # просмотр пунктов пользовательского списка
-    #dp.register_callback_query_handler(insert_thing)  # добавление пунктов в пользовательский список
+
 
 

@@ -58,7 +58,7 @@ def view_list(id, list_name):
 #     id = callback.from_user.id  # посмотреть ID через коллбэки
 #     data_base = sq.connect('ListBotBase2.db')  # связь с БД
 #     cur = data_base.cursor()
-#     cur.execute(f'DELETE FROM things WHERE thing = "{callback.data}" AND user_id = {id}')
+#     cur.execute(f'DELETE FROM lists WHERE thing = ? AND user_id = ?', (callback.data, id))
 #     data_base.commit()
 #     await bot.delete_message(callback.from_user.id, callback.message.message_id)  # удаление предыдущего сообщения бота
 #
