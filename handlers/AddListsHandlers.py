@@ -20,6 +20,19 @@ def AddFlag_write(AddFlag, id):
     data_base.close()  # закрытие ДБ
 
 
+def DelFlag_write(delflag, id):
+    """записывает DelFlag в БД"""
+    data_base = sq.connect('ListBotBase2.db')  # добавление данных в список дел
+    cur = data_base.cursor()
+    cur.execute(f"SELECT DelFlag FROM flags WHERE user_id = {id} ")  # выбор значения
+    if cur.fetchone():
+        cur.execute(f'UPDATE flags SET DelFlag = {delflag} WHERE user_id = {id}')
+    else:
+        cur.execute("""INSERT INTO flags(user_id,DelFlag) VALUES(?,?)""",
+                    (id, delflag))  # добавление данных
+    data_base.commit()  # подтверждение действий
+    data_base.close()  # закрытие ДБ
+
 def view_user_lists(id):
     """создает и возвращет пользовательские списки в виде клавиатуры"""
     list_kb = InlineKeyboardMarkup()  # создание клавиатуры списка
@@ -85,6 +98,24 @@ async def add_list(message: types.Message):  # создание списка
         AddFlag_write(AddFlag, id)  # запись AddFlag в БД
 
 
+async def del_list(message: types.Message):  # кнопка 'удалить список'
+    id = message.chat.id
+    await del_mess(id)  # удаление предыдущего сообщения
+    list_len = check_lists_numb(id)  # проверка количества польовательских списков
+    if list_len > 0:
+        list_kb = view_user_lists(id)
+        msg = await message.answer('Какой список следует удалить?', reply_markup=list_kb)
+        msg_id_write(msg, id)  # записывает айди сообщения в БД
+        await message.delete()  # удалить сообщение пользователя
+        DelFlag = 1
+        DelFlag_write(DelFlag, id)  # запись AddFlag в БД
+    else:
+        msg = await message.answer('Да ведь нечего удалить-то!', reply_markup=kb_start)
+        msg_id_write(msg, id)  # записывает айди сообщения в БД
+        await message.delete()  # удалить сообщение пользователя
+        DelFlag = 0
+        DelFlag_write(DelFlag, id) # запись DelFlag  в БД
+
 async def insert_smth(message: types.Message):
     id = message.chat.id
     await del_mess(id)  # удаление предыдущего сообщения
@@ -148,11 +179,21 @@ async def view_thing_in_list(callback: types.CallbackQuery):
     await del_mess(id)  # удаление предыдущего сообщения
     flag = check_user_list(id, list_name)
     LoTFl = list_or_thing(id, list_name)
+    data_base = sq.connect('ListBotBase2.db')
+    cur = data_base.cursor()
+    DelFlag = cur.execute(f"SELECT DelFlag FROM flags WHERE user_id = {id}").fetchone()[0]
     if LoTFl:  # если list_name - пользовательский список
-        if flag:
-            list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры
-            msg = await bot.send_message(callback.from_user.id, f'Список "{list_name}": ', reply_markup=list_kb)
-            msg_id_write(msg, id)  # записывает айди сообщения в БД
+        if flag:  # есть ли записи в списке
+            if DelFlag == 1:  # удаление списка
+                cur.execute(f'DELETE FROM lists WHERE list = ? AND user_id = ?', (list_name, id))
+                data_base.commit()
+                msg = await bot.send_message(callback.from_user.id, f'Список "{list_name}" удален: ', reply_markup=kb_start)
+                msg_id_write(msg, id)  # записывает айди сообщения в БД
+            else:
+                list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры
+                msg = await bot.send_message(callback.from_user.id, f'Список "{list_name}": ', reply_markup=list_kb)
+                msg_id_write(msg, id)  # записывает айди сообщения в БД
+
         else:
             await callback.answer('Похоже, список пуст.', show_alert=True)
             msg = await bot.send_message(callback.from_user.id, 'Напишите, что нужно добавить в список?', reply_markup=kb_start)
@@ -162,7 +203,7 @@ async def view_thing_in_list(callback: types.CallbackQuery):
         cur = data_base.cursor()
         cur.execute(f'DELETE FROM lists WHERE thing = ? AND user_id = ?', (callback.data, id))
         data_base.commit()
-        #await bot.delete_message(callback.from_user.id, callback.message.message_id)  # удаление предыдущего сообщения бота
+        # await bot.delete_message(callback.from_user.id, callback.message.message_id)  # удаление предыдущего сообщения бота
         flag = check_data_base(id)
         if flag:
             list_kb = view_list(id,list_name)  # функция создает и возвращет список дел в виде клавиатуры
@@ -176,6 +217,7 @@ async def view_thing_in_list(callback: types.CallbackQuery):
 
 def register_AddLIst_handlers(dp: Dispatcher):
     dp.register_message_handler(add_list, (Text(equals='создать список')))  # создание списка
+    dp.register_message_handler(del_list, (Text(equals='удалить список')))  # удаление списка
     dp.register_message_handler(add_lists_button, (Text(equals='показать списки')))   # ПОКАЗ СПИСКА
     dp.register_message_handler(insert_smth)  # добавление пользовательских списков и пунктов в них
     dp.register_callback_query_handler(view_thing_in_list)  # просмотр пунктов пользовательского списка
