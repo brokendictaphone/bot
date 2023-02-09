@@ -1,6 +1,7 @@
 import sqlite3 as sq
 from create_bot import bot
 
+
 async def del_mess(id):
     """удаляет сообщения бота по месседж айди"""
     data_base = sq.connect('ListBotBase2.db')  # связь с БД
