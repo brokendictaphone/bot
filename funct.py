@@ -34,3 +34,14 @@ def check_data_base(id):
     if len(res.fetchall()) > 0:
         flag = True
     return flag
+
+
+def check_thing_in_data_base(user_list_name, id):
+    """проверяет, есть ли пункты в ПС"""
+    flag = False
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
+    cur = data_base.cursor()
+    res = cur.execute("SELECT thing FROM lists WHERE list = ? AND user_id = ? ", (user_list_name, id))  # вывод данных из БД(выбрать всё из таблицы пользователи
+    if len(res.fetchall()) > 1:
+        flag = True
+    return flag

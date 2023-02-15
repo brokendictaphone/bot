@@ -111,8 +111,6 @@ async def add_list(message: types.Message):  # кнопка создать сп�
 
 
 async def del_list(message: types.Message):  # кнопка 'удалить список'
-    # AddFlag_write(0, id)  # запись AddFlag в БД
-    # ThingAddFl_write(0,id)  # запись ThingAddFl в БД
     id = message.chat.id
     await del_mess(id)  # удаление предыдущего сообщения
     list_len = check_lists_numb(id)  # проверка количества польовательских списков
@@ -158,17 +156,18 @@ async def insert_smth(message: types.Message):
         if '"' in message.text:
             msg = await message.answer('Нельзя использовать кавычки! Введи без них')
             msg_id_write(msg, id)  # записывает айди сообщения в БД
+            await message.delete()  # удалить сообщение пользователя
         elif len(message.text) > 25:
             msg = await message.answer('Слишком длинно, не возьмусь')
             msg_id_write(msg, id)  # записывает айди сообщения в БД
+            await message.delete()  # удалить сообщение пользователя
         else:
             cur.execute("""INSERT INTO lists VALUES(?,?,?)""",
                         (id, list_name, message.text))  # добавление данных в список дел
             data_base.commit()  # подтверждение действий
             list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры
-            msg = await message.answer(f'Вот и добавили "{message.text}" в список', reply_markup=list_kb)
-
-            await message.answer(f'Что ещё нужно добавить в список?', reply_markup=kb_start)
+            msg = await message.answer(f'Вот и добавили "{message.text}" в список. Добавим ещё что-то?', reply_markup=list_kb)
+            #await message.answer(f'Что ещё нужно добавить в список?', reply_markup=kb_start)
             msg_id_write(msg, id)  # записывает айди сообщения в БД
             await message.delete()  # удалить сообщение пользователя
 
@@ -222,16 +221,18 @@ async def view_thing_in_list(callback: types.CallbackQuery):  # просмотр
     else:   # если list_name - пункт в пользовательском списке(УДАЛЕНИЕ)
         data_base = sq.connect('ListBotBase2.db')  # связь с БД
         cur = data_base.cursor()
+        user_list_name = \
+        cur.execute("SELECT list FROM lists WHERE user_id = ? AND thing = ?", (id, list_name)).fetchone()[0]  # имя ПС
         cur.execute(f'DELETE FROM lists WHERE thing = ? AND user_id = ?', (callback.data, id))
         data_base.commit()
-        #await del_mess(id)  # удаление предыдущего сообщения
-        flag = check_data_base(id)
+        # await del_mess(id)  # удаление предыдущего сообщения
+        flag = check_thing_in_data_base(user_list_name, id)  # проверяет, есть ли пункты в ПС
         if flag:
-            list_kb = view_list(id,list_name)  # функция создает и возвращет список дел в виде клавиатуры
-            msg = await bot.send_message(callback.from_user.id, 'Дельце-то сделано!', reply_markup=kb_start)
+            list_kb = view_list(id,user_list_name)  # функция создает и возвращет список дел в виде клавиатуры
+            msg = await bot.send_message(callback.from_user.id, 'Дельце-то сделано!', reply_markup=list_kb)
             msg_id_write(msg, id)  # записывает айди сообщения в БД
         else:
-            await callback.answer('Похоже, все дела переделаны. Мои поздравления!', show_alert=True)
+            await callback.answer(f'Похоже, все дела из списка "{user_list_name}" переделаны. Мои поздравления!', show_alert=True)
             msg = await bot.send_message(callback.from_user.id, 'Продолжим?', reply_markup=kb_start)
             msg_id_write(msg, id)  # записывает айди сообщения в БД
 
