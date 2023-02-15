@@ -92,11 +92,10 @@ def check_user_list(id, list_name):
 
 
 async def add_list(message: types.Message):  # кнопка создать список
-    global ThingAddFl
     id = message.chat.id
     await del_mess(id)  # удаление предыдущего сообщения
     list_len = check_lists_numb(id)  # проверка количества польовательских списков
-    ThingAddFl = 0
+    ThingAddFl_write(0, id)  # выключение режима записи нового пункта в БД ПС(запись флага в БД)
     if list_len < 3:
         msg = await message.answer('Введите название нового списка: ')
         msg_id_write(msg, id)  # записывает айди сообщения в БД
@@ -138,6 +137,7 @@ async def insert_smth(message: types.Message):
     data_base = sq.connect('ListBotBase2.db')
     cur = data_base.cursor()
     AddFlag = cur.execute(f"SELECT AddFlag FROM flags WHERE user_id = {id}").fetchone()[0]
+    ThingAddFl = cur.execute(f"SELECT ThingAddFl FROM flags WHERE user_id = {id}").fetchone()[0]
     if ThingAddFl == 0:
         if AddFlag == 1:
             cur.execute("""INSERT INTO lists VALUES(?,?,?)""", (id, message.text, None))  # добавление нового списка
@@ -173,9 +173,8 @@ async def insert_smth(message: types.Message):
             await message.delete()  # удалить сообщение пользователя
 
 async def view_lists_button(message: types.Message):  # кнопка показать списки
-    global ThingAddFl
-    ThingAddFl = 0
     id = message.chat.id
+    ThingAddFl_write(0, id)  # выключение режима записи нового пункта в БД ПС(запись флага в БД)
     await del_mess(id)  # удаление предыдущего сообщения
     flag = check_data_base(id)
     if flag:
@@ -190,10 +189,10 @@ async def view_lists_button(message: types.Message):  # кнопка показ�
 
 
 async def view_thing_in_list(callback: types.CallbackQuery):  # просмотр пунктов пользовательского списка
-    global ThingAddFl, list_name
-    ThingAddFl = 1
-    list_name = callback.data
+    global list_name
     id = callback.from_user.id  # посмотреть ID через коллбэки
+    ThingAddFl_write(1, id)
+    list_name = callback.data
     await del_mess(id)  # удаление предыдущего сообщения
 
     flag = check_user_list(id, list_name)  # проверяет, есть ли пункты в пользовательском списке?
