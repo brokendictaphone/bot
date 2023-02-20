@@ -4,9 +4,9 @@ from keyboard import kb_start
 from create_bot import dp
 from funct import *
 from handlers import AddListsHandlers
-from handlers.AddListsHandlers import AddFlag_write, DelFlag_write, ThingAddFl_write
+from handlers.AddListsHandlers import AddFlag_write, DelFlag_write, ThingAddFl_write, FrstMessFlag_check_n_write
 
-FrstMessFlag = True   # в значении Тру - первое сообщение, в значении Фалс - все последующие
+FrstMessFlag = 0   # в значении 0 - первое сообщение, в значении 1 - все последующие
 AddFlag = 0  # флаг создания нового списка ( 1 - создаем список, фалс - 0)
 DelFlag = 0  # флаг удаления нового списка ( 1 - удаляем список, фалс - 0)
 ThingAddFl = 0 # флаг добавления пункта в пользовательский список (1 - добавляем пункт, 0 - нет)
@@ -28,7 +28,8 @@ cur.execute("""CREATE TABLE IF NOT EXISTS flags (
     user_id INT,
     AddFlag NULL,
     DelFlag NULL,
-    ThingAddFl NULL
+    ThingAddFl NULL,
+    FrstMessFlag NULL
 )""")   # создание таблицы флагов, в скобках указаны столбцы и тип данных в них
 
 data_base.commit()  # подтверждение действий
@@ -41,11 +42,11 @@ async def on_startup(_):  # служебное сообщение
 
 @dp.message_handler(commands=['start', 'help'])  # команда старт и кнопки
 async def command_start(message: types.Message):
-    global FrstMessFlag
-    AddFlag = 0  # флаг создания нового списка
     id = message.chat.id
 
-    if not FrstMessFlag:
+    AddFlag = 0  # флаг создания нового списка
+    FrstMessFlag = FrstMessFlag_check_n_write(id)  # проверка на первое сообщение
+    if FrstMessFlag == 1:  # если сообщение не первое
         await del_mess(id)  # удаление предыдущего сообщения
 
     msg = await bot.send_message(message.from_user.id, f'Привет, {message.chat.first_name.title()}!'
@@ -59,7 +60,7 @@ async def command_start(message: types.Message):
     DelFlag_write(DelFlag, id)  # запись DelFlag в БД
     ThingAddFl_write(ThingAddFl,id)  # запись ThingAddFl в БД
     await message.delete()  # удалить сообщение пользователя
-    FrstMessFlag = False
+
 
 
 

@@ -6,6 +6,23 @@ from things_add import *
 import sqlite3 as sq
 ThingAddFl = 0
 
+
+def FrstMessFlag_check_n_write(id):
+    """проверяет и записывает FrstMessFlag в БД"""
+    data_base = sq.connect('ListBotBase2.db')  # добавление данных в список дел
+    cur = data_base.cursor()
+    cur.execute(f"SELECT FrstMessFlag FROM flags WHERE user_id = {id} ")  # выбор значения
+    if cur.fetchone():
+        FrstMessFlag = 1
+    else:
+        FrstMessFlag = 0
+        cur.execute("""INSERT INTO flags(user_id,AddFlag) VALUES(?,?)""",
+                    (id, 1))  # добавление данных
+    data_base.commit()  # подтверждение действий
+    data_base.close()  # закрытие ДБ
+    return FrstMessFlag
+
+
 def AddFlag_write(AddFlag, id):
     """записывает AddFlag в БД"""
     data_base = sq.connect('ListBotBase2.db')  # добавление данных в список дел
