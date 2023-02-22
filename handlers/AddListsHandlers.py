@@ -166,9 +166,11 @@ async def insert_smth(message: types.Message):
             cur.execute("""INSERT INTO lists VALUES(?,?,?)""",
                         (id, list_name, message.text))  # добавление данных в список дел
             data_base.commit()  # подтверждение действий
+            await del_mess(id)  # удаление предыдущего сообщения
             list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры
             msg = await message.answer(f'Вот и добавили "{message.text}" в список. Добавим ещё что-то?', reply_markup=list_kb)
-            await message.answer(f'Что ещё нужно добавить в список?', reply_markup=kb_start)  # клавиатура стартовая
+            msg_id_write(msg, id)  # записывает айди сообщения в БД
+            msg = await message.answer(f'Что ещё нужно добавить в список?', reply_markup=kb_start)  # клавиатура стартовая
             msg_id_write(msg, id)  # записывает айди сообщения в БД
             await message.delete()  # удалить сообщение пользователя
 
