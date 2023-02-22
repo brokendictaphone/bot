@@ -45,9 +45,9 @@ async def command_start(message: types.Message):
     id = message.chat.id
 
     AddFlag = 0  # флаг создания нового списка
-    FrstMessFlag = FrstMessFlag_check_n_write(id)  # проверка на первое сообщение
-    if FrstMessFlag == 1:  # если сообщение не первое
-        await del_mess(id)  # удаление предыдущего сообщения
+    # FrstMessFlag = FrstMessFlag_check_n_write(id)  # проверка на первое сообщение
+    # if FrstMessFlag == 1:  # если сообщение не первое
+    await del_mess(id)  # удаление предыдущего сообщения
 
     msg = await bot.send_message(message.from_user.id, f'Привет, {message.chat.first_name.title()}!'
                                                  f' Я бот для составления списков, для того чтобы добавить что-нибудь'

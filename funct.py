@@ -6,8 +6,11 @@ async def del_mess(id):
     """удаляет сообщения бота по месседж айди"""
     data_base = sq.connect('ListBotBase2.db')  # связь с БД
     cur = data_base.cursor()
+    # try:
     for msg_id in cur.execute(f"SELECT msg FROM msg_ids WHERE user_id = {id}"):
         await bot.delete_message(id, msg_id[0])
+    # except FileNotFoundError:
+    #     print('да ведь нет мессаги-то этой, братец!')
     data_base.close()  # закрытие ДБ
 
 

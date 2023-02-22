@@ -184,7 +184,7 @@ async def insert_smth(message: types.Message):
             data_base.commit()  # подтверждение действий
             list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры
             msg = await message.answer(f'Вот и добавили "{message.text}" в список. Добавим ещё что-то?', reply_markup=list_kb)
-            #await message.answer(f'Что ещё нужно добавить в список?', reply_markup=kb_start)
+            await message.answer(f'Что ещё нужно добавить в список?', reply_markup=kb_start)  # клавиатура стартовая
             msg_id_write(msg, id)  # записывает айди сообщения в БД
             await message.delete()  # удалить сообщение пользователя
 
@@ -229,6 +229,7 @@ async def view_thing_in_list(callback: types.CallbackQuery):  # просмотр
             if flag:  # если в ПС не пуст
                 list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры
                 msg = await bot.send_message(callback.from_user.id, f'Список "{list_name}": ', reply_markup=list_kb)
+                await bot.send_message(callback.from_user.id,'text', reply_markup=kb_start)  # клавиатура стартовая
                 msg_id_write(msg, id)  # записывает айди сообщения в БД
             else:
                 await callback.answer('Похоже, список пуст.', show_alert=True)
@@ -247,6 +248,7 @@ async def view_thing_in_list(callback: types.CallbackQuery):  # просмотр
         if flag:
             list_kb = view_list(id,user_list_name)  # функция создает и возвращет список дел в виде клавиатуры
             msg = await bot.send_message(callback.from_user.id, 'Дельце-то сделано!', reply_markup=list_kb)
+            await bot.send_message(callback.from_user.id,'text', reply_markup=kb_start)  # клавиатура стартовая
             msg_id_write(msg, id)  # записывает айди сообщения в БД
         else:
             await callback.answer(f'Похоже, все дела из списка "{user_list_name}" переделаны. Мои поздравления!', show_alert=True)
