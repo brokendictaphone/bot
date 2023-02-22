@@ -8,7 +8,6 @@ async def del_mess(id):
     cur = data_base.cursor()
     for msg_id in cur.execute(f"SELECT msg FROM msg_ids WHERE user_id = {id}"):
         await bot.delete_message(id, msg_id[0])
-        print(msg_id[0])
     data_base.close()  # закрытие ДБ
 
 
