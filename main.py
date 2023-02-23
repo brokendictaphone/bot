@@ -3,12 +3,12 @@ from aiogram import types
 from keyboard import kb_start
 from create_bot import dp
 from funct import *
-from handlers import AddListsHandlers, DelListHandlers, ViewListHandlers
+from handlers import AddListsHandlers, DelListHandlers, ViewListHandlers, ViewItemHandlers
 from handlers.AddListsHandlers import AddFlag_write, DelFlag_write, ThingAddFl_write
 
 AddFlag = 0  # флаг создания нового списка ( 1 - создаем список, фалс - 0)
 DelFlag = 0  # флаг удаления нового списка ( 1 - удаляем список, фалс - 0)
-ThingAddFl = 0 # флаг добавления пункта в пользовательский список (1 - добавляем пункт, 0 - нет)
+ThingAddFl = 0  # флаг добавления пункта в пользовательский список (1 - добавляем пункт, 0 - нет)
 
 data_base = sq.connect('ListBotBase2.db')
 cur = data_base.cursor()
@@ -53,15 +53,15 @@ async def command_start(message: types.Message):
 
     AddFlag_write(AddFlag, id)  # запись AddFlag в БД
     DelFlag_write(DelFlag, id)  # запись DelFlag в БД
-    ThingAddFl_write(ThingAddFl,id)  # запись ThingAddFl в БД
+    ThingAddFl_write(ThingAddFl, id)  # запись ThingAddFl в БД
     await message.delete()  # удалить сообщение пользователя
 
 
-
-
 DelListHandlers.register_del_list_handlers(dp)  # удаление пользовательских списков
-ViewListHandlers.register_view_list_handlers(dp)  # просмотр пользоваьельских списков
+# ViewItemHandlers.register_view_item_handlers(dp)  # просмотр пунктов в ПС
+ViewListHandlers.register_view_list_handlers(dp)  # просмотр пользовательских списков
 AddListsHandlers.register_AddLIst_handlers(dp)  # добавление пользовательских списков
+
 
 executor.start_polling(dp, skip_updates=True, on_startup=on_startup)  # skip_updates - бот не будет отвечать на сообщения, которые были присланы,
                                             # когда он был офлайн

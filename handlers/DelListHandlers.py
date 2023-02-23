@@ -29,7 +29,6 @@ async def del_list_button(message: types.Message):  # кнопка 'удалит
 async def del_list(callback: types.CallbackQuery):  # удаление пунктов пользовательского списка
     global list_name
     id = callback.from_user.id  # посмотреть ID через коллбэки
-    #ThingAddFl_write(1, id)
     list_name = callback.data
     await del_mess(id)  # удаление предыдущего сообщения
 
@@ -38,14 +37,13 @@ async def del_list(callback: types.CallbackQuery):  # удаление пунк�
     data_base = sq.connect('ListBotBase2.db')
     cur = data_base.cursor()
     DelFlag = cur.execute(f"SELECT DelFlag FROM flags WHERE user_id = {id}").fetchone()[0]
-    if LoTFl:  # если list_name - пользовательский список
-        if DelFlag:  # удаление списка
-            cur.execute(f'DELETE FROM lists WHERE list = ? AND user_id = ?', (list_name, id))
-            data_base.commit()
-            msg = await bot.send_message(callback.from_user.id, f'Список "{list_name}" удален! ', reply_markup=kb_start)
-            msg_id_write(msg, id)  # записывает айди сообщения в БД
-            DelFlag = 0
-            DelFlag_write(DelFlag, id)  # запись DelFlag  в БД
+    if LoTFl and DelFlag == 1:  # если list_name - ПС и флаг удаления включен
+        cur.execute(f'DELETE FROM lists WHERE list = ? AND user_id = ?', (list_name, id))
+        data_base.commit()
+        msg = await bot.send_message(callback.from_user.id, f'Список "{list_name}" удален! ', reply_markup=kb_start)
+        msg_id_write(msg, id)  # записывает айди сообщения в БД
+        DelFlag = 0
+        DelFlag_write(DelFlag, id)  # запись DelFlag  в БД
 
 
 def register_del_list_handlers(dp: Dispatcher):

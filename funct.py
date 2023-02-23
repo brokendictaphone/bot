@@ -68,6 +68,17 @@ def view_user_lists(id):
     return list_kb
 
 
+def check_user_list(id, list_name):
+    """проверяет, есть ли пункты в пользовательском списке"""
+    flag = False
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
+    cur = data_base.cursor()
+    res = cur.execute("SELECT thing FROM lists WHERE user_id = ? AND list = ?", (id, list_name))  # вывод данных из БД(выбрать всё из таблицы пользователи
+    if len(res.fetchall()) > 1:  # если в списке есть хотя бы одна не пустая запись
+        flag = True
+    return flag
+
+
 def list_or_thing(id, check_name):
     """проверяет, входит ли запись в пользовательские списки"""
     LoTFl = False
@@ -78,3 +89,18 @@ def list_or_thing(id, check_name):
         if tpl[0] == check_name:
             LoTFl = True
     return LoTFl
+
+
+def view_list(id, list_name):
+    """создает и возвращет список дел в виде клавиатуры"""
+    list_kb = InlineKeyboardMarkup()  # создание клавиатуры списка
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
+    cur = data_base.cursor()
+    for things in cur.execute("SELECT thing FROM lists WHERE user_id = ? AND list = ?", (id, list_name)):  # вывод данных из БД(выбрать всё из таблицы пользователи)
+        for thing in things:
+            if thing is None:  # "отфильтровывает" первый пустой пункт
+                continue
+            else:
+                b = InlineKeyboardButton(thing, callback_data=thing)
+                list_kb.row(b)
+    return list_kb

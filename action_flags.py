@@ -17,7 +17,7 @@ def AddFlag_write(AddFlag, id):
 
 def DelFlag_write(delflag, id):
     """записывает DelFlag в БД"""
-    data_base = sq.connect('ListBotBase2.db')  # добавление данных в список дел
+    data_base = sq.connect('ListBotBase2.db')  # добавление данных
     cur = data_base.cursor()
     cur.execute(f"SELECT DelFlag FROM flags WHERE user_id = {id} ")  # выбор значения
     if cur.fetchone():

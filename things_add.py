@@ -2,19 +2,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import sqlite3 as sq
 
 
-def view_list(id, list_name):
-    """создает и возвращет список дел в виде клавиатуры"""
-    list_kb = InlineKeyboardMarkup()  # создание клавиатуры списка
-    data_base = sq.connect('ListBotBase2.db')  # связь с БД
-    cur = data_base.cursor()
-    for things in cur.execute("SELECT thing FROM lists WHERE user_id = ? AND list = ?", (id, list_name)):  # вывод данных из БД(выбрать всё из таблицы пользователи)
-        for thing in things:
-            if thing is None:  # "отфильтровывает" первый пустой пункт
-                continue
-            else:
-                b = InlineKeyboardButton(thing, callback_data=thing)
-                list_kb.row(b)
-    return list_kb
+
 
 
 # @dp.message_handler(Text(equals='показать список'))  # ПОКАЗ СПИСКА
