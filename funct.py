@@ -1,12 +1,12 @@
 import sqlite3 as sq
 from create_bot import bot
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 async def del_mess(id):
     """удаляет сообщения бота по месседж айди"""
     data_base = sq.connect('ListBotBase2.db')  # связь с БД
     cur = data_base.cursor()
- #   for msg_id in cur.execute(f"SELECT msg FROM msg_ids WHERE user_id = {id}"):
     cur.execute(f"SELECT msg FROM msg_ids WHERE user_id = {id}")
     msg_list = cur.fetchall()
     for msg_id in msg_list:
@@ -20,8 +20,7 @@ def msg_id_write(msg, id):
     """записывает id сообщения в БД"""
     data_base = sq.connect('ListBotBase2.db')  # добавление данных в список дел
     cur = data_base.cursor()
-    cur.execute("""INSERT INTO msg_ids(user_id,msg) VALUES(?,?)""",
-                    (id, msg.message_id))  # добавление данных
+    cur.execute("""INSERT INTO msg_ids(user_id,msg) VALUES(?,?)""", (id, msg.message_id))  # добавление данных
     data_base.commit()  # подтверждение действий
     data_base.close()  # закрытие ДБ
 
@@ -46,3 +45,36 @@ def check_thing_in_data_base(user_list_name, id):
     if len(res.fetchall()) > 1:
         flag = True
     return flag
+
+
+def check_lists_numb(id):
+    """проверка количества списков"""
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
+    cur = data_base.cursor()
+    res = cur.execute(f"SELECT DISTINCT list FROM lists WHERE user_id = {id}")  # вывод данных из БД(выбрать всё из таблицы пользователи)
+    length = len(res.fetchall())
+    return length
+
+
+def view_user_lists(id):
+    """создает и возвращет пользовательские списки в виде клавиатуры"""
+    list_kb = InlineKeyboardMarkup()  # создание клавиатуры списка
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
+    cur = data_base.cursor()
+    list = cur.execute(f"SELECT DISTINCT list FROM lists WHERE user_id = {id}")  # вывод данных из БД(выбрать всё из таблицы )
+    for tpl in list.fetchall():
+        b = InlineKeyboardButton(tpl[0], callback_data=tpl[0])
+        list_kb.row(b)
+    return list_kb
+
+
+def list_or_thing(id, check_name):
+    """проверяет, входит ли запись в пользовательские списки"""
+    LoTFl = False
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
+    cur = data_base.cursor()
+    res = cur.execute(f"SELECT DISTINCT list FROM lists WHERE user_id = {id}") # вывод данных из БД(выбрать всё из таблицы пользователи)
+    for tpl in res.fetchall():
+        if tpl[0] == check_name:
+            LoTFl = True
+    return LoTFl

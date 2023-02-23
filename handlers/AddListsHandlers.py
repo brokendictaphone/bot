@@ -47,38 +47,6 @@ def ThingAddFl_write(thingaddfl, id):
                     (id, thingaddfl))  # добавление данных
     data_base.commit()  # подтверждение действий
     data_base.close()  # закрытие ДБ
-def view_user_lists(id):
-    """создает и возвращет пользовательские списки в виде клавиатуры"""
-    list_kb = InlineKeyboardMarkup()  # создание клавиатуры списка
-    data_base = sq.connect('ListBotBase2.db')  # связь с БД
-    cur = data_base.cursor()
-    list  = cur.execute(f"SELECT DISTINCT list FROM lists WHERE user_id = {id}")  # вывод данных из БД(выбрать всё из таблицы )
-    for tpl in list.fetchall():
-        b = InlineKeyboardButton(tpl[0], callback_data=tpl[0])
-        list_kb.row(b)
-    return list_kb
-
-
-def check_lists_numb(id):
-    """проверка количества списков"""
-    data_base = sq.connect('ListBotBase2.db')  # связь с БД
-    cur = data_base.cursor()
-    res = cur.execute(f"SELECT DISTINCT list FROM lists WHERE user_id = {id}") # вывод данных из БД(выбрать всё из таблицы пользователи)
-    length = len(res.fetchall())
-    return length
-
-
-def list_or_thing(id, check_name):
-    """проверяет, входит ли запись в пользовательские списки"""
-    LoTFl = False
-    data_base = sq.connect('ListBotBase2.db')  # связь с БД
-    cur = data_base.cursor()
-    res = cur.execute(f"SELECT DISTINCT list FROM lists WHERE user_id = {id}") # вывод данных из БД(выбрать всё из таблицы пользователи)
-    for tpl in res.fetchall():
-        if tpl[0] == check_name:
-            LoTFl = True
-    return LoTFl
-
 
 
 def check_user_list(id, list_name):
@@ -246,7 +214,6 @@ async def view_thing_in_list(callback: types.CallbackQuery):  # просмотр
 
 def register_AddLIst_handlers(dp: Dispatcher):
     dp.register_message_handler(add_list, (Text(equals='создать список')))  # создание списка
-    dp.register_message_handler(del_list, (Text(equals='удалить список')))  # удаление списка
     dp.register_message_handler(view_lists_button, (Text(equals='показать списки')))   # показ списков
     dp.register_message_handler(insert_smth)  # добавление пользовательских списков и пунктов в них
     dp.register_callback_query_handler(view_thing_in_list)  # просмотр пунктов пользовательского списка
