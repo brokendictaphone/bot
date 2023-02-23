@@ -197,7 +197,7 @@ async def view_thing_in_list(callback: types.CallbackQuery):  # просмотр
 
 def register_AddLIst_handlers(dp: Dispatcher):
     dp.register_message_handler(add_list, (Text(equals='создать список')))  # создание списка
-    dp.register_message_handler(view_lists_button, (Text(equals='показать списки')))   # показ списков
+    # dp.register_message_handler(view_lists_button, (Text(equals='показать списки')))   # показ списков
     dp.register_message_handler(insert_smth)  # добавление пользовательских списков и пунктов в них
     dp.register_callback_query_handler(view_thing_in_list)  # просмотр пунктов пользовательского списка
 
