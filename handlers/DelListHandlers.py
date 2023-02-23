@@ -3,22 +3,23 @@ from aiogram import types, Dispatcher
 from create_bot import bot
 from keyboard import kb_start
 from funct import del_mess, msg_id_write, check_lists_numb, view_user_lists, list_or_thing
+from flags import DelFlag_write
 import sqlite3 as sq
 
 
-def DelFlag_write(delflag, id):
-    """записывает DelFlag в БД"""
-    data_base = sq.connect('ListBotBase2.db')  # добавление данных в список дел
-    cur = data_base.cursor()
-    cur.execute(f"SELECT DelFlag FROM flags WHERE user_id = {id} ")  # выбор значения
-    if cur.fetchone():
-        cur.execute(f'UPDATE flags SET DelFlag = {delflag} WHERE user_id = {id}')
-    else:
-        cur.execute("""INSERT INTO flags(user_id,DelFlag) VALUES(?,?)""",
-                    (id, delflag))  # добавление данных
-    data_base.commit()  # подтверждение действий
-    data_base.close()  # закрытие ДБ
-
+# def DelFlag_write(delflag, id):
+#     """записывает DelFlag в БД"""
+#     data_base = sq.connect('ListBotBase2.db')  # добавление данных в список дел
+#     cur = data_base.cursor()
+#     cur.execute(f"SELECT DelFlag FROM flags WHERE user_id = {id} ")  # выбор значения
+#     if cur.fetchone():
+#         cur.execute(f'UPDATE flags SET DelFlag = {delflag} WHERE user_id = {id}')
+#     else:
+#         cur.execute("""INSERT INTO flags(user_id,DelFlag) VALUES(?,?)""",
+#                     (id, delflag))  # добавление данных
+#     data_base.commit()  # подтверждение действий
+#     data_base.close()  # закрытие ДБ
+#
 
 async def del_list_button(message: types.Message):  # кнопка 'удалить список'
     id = message.chat.id
