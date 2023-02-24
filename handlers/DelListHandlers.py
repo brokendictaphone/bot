@@ -24,7 +24,7 @@ async def del_list_button(message: types.Message):  # кнопка 'удалит
         await message.delete()  # удалить сообщение пользователя
 
 
-async def del_list(callback: types.CallbackQuery, state: FSMContext):  # удаление пунктов пользовательского списка
+async def del_list(callback: types.CallbackQuery, state: FSMContext):  # удаление пользовательского списка
     global list_name
     id = callback.from_user.id  # посмотреть ID через коллбэки
     list_name = callback.data
@@ -33,6 +33,7 @@ async def del_list(callback: types.CallbackQuery, state: FSMContext):  # уда�
     cur = data_base.cursor()
     cur.execute(f'DELETE FROM lists WHERE list = ? AND user_id = ?', (list_name, id))
     data_base.commit()
+    data_base.close()
     msg = await bot.send_message(callback.from_user.id, f'Список "{list_name}" удален! ', reply_markup=kb_start)
     msg_id_write(msg, id)  # записывает айди сообщения в БД
     await state.finish()  # выключение машины состояний
