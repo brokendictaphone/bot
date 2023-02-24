@@ -1,5 +1,7 @@
 from aiogram.dispatcher.filters import Text
 from aiogram import types, Dispatcher
+from aiogram.dispatcher import FSMContext
+from FSMachine import FSMStates
 from keyboard import kb_start
 from funct import *
 from action_flags import *
@@ -15,35 +17,34 @@ async def add_list_button(message: types.Message):  # кнопка создат�
         msg = await message.answer('Введите название нового списка: ')
         msg_id_write(msg, id)  # записывает айди сообщения в БД
         await message.delete()  # удалить сообщение пользователя
-        AddFlag = 1  # разрешение на добавление пользовательского списка в БД
-        AddFlag_write(AddFlag, id)  # запись AddFlag в БД
+        await FSMStates.add_list.set()  # включено состояние "создать ПС"
     else:
         msg = await message.answer('Нельзя создать больше 3 списков!', reply_markup=kb_start)
         msg_id_write(msg, id)  # записывает айди сообщения в БД
         await message.delete()  # удалить сообщение пользователя
-        AddFlag = 0
-        AddFlag_write(AddFlag, id)  # запись AddFlag в БД
 
 
-async def add_list(message: types.Message):  # создание ПС
+async def add_list(message: types.Message, state: FSMContext):  # создание ПС
     id = message.chat.id
     await del_mess(id)  # удаление предыдущего сообщения
     data_base = sq.connect('ListBotBase2.db')
     cur = data_base.cursor()
-    AddFlag = cur.execute(f"SELECT AddFlag FROM flags WHERE user_id = {id}").fetchone()[0]
+    cur.execute("""INSERT INTO lists VALUES(?,?,?)""", (id, message.text, None))  # добавление нового списка
+    data_base.commit()  # подтверждение действий
+    data_base.close()
+    msg = await message.answer(f'Вот и создан список "{message.text}"', reply_markup=kb_start)
+    msg_id_write(msg, id)  # записывает айди сообщения в БД
+    await message.delete()  # удалить сообщение пользователя
+    await state.finish()  # выключение машины состояний
 
-    if AddFlag == 1:
-        cur.execute("""INSERT INTO lists VALUES(?,?,?)""", (id, message.text, None))  # добавление нового списка
-        data_base.commit()  # подтверждение действий
-        msg = await message.answer(f'Вот и создан список "{message.text}"', reply_markup=kb_start)
-        msg_id_write(msg, id)  # записывает айди сообщения в БД
-        await message.delete()  # удалить сообщение пользователя
-        AddFlag = 0
-        AddFlag_write(AddFlag, id)  # запись AddFlag в БД
-    else:
-        msg = await message.answer(f'Сначала нужно нажать кнопку "создать список"!', reply_markup=kb_start)
-        msg_id_write(msg, id)  # записывает айди сообщения в БД
-        await message.delete()  # удалить сообщение пользователя
+
+
+async def prompt_mess(message: types.Message):  # подсказка
+    id = message.chat.id
+    await del_mess(id)  # удаление предыдущего сообщения
+    msg = await message.answer(f'Сначала нужно нажать кнопку "создать список"!', reply_markup=kb_start)
+    msg_id_write(msg, id)  # записывает айди сообщения в БД
+    await message.delete()  # удалить сообщение пользователя
 
 #
 # async def insert_smth(message: types.Message):
@@ -144,8 +145,9 @@ async def add_list(message: types.Message):  # создание ПС
 
 
 def register_AddLIst_handlers(dp: Dispatcher):
-    dp.register_message_handler(add_list_button, (Text(equals='создать список')))  # кнопка "создать список"
-    dp.register_message_handler(add_list)  # создание списка
+    dp.register_message_handler(add_list_button, (Text(equals='создать список')), state=None)  # кнопка "создать список"
+    dp.register_message_handler(add_list, state=FSMStates.add_list)  # создание списка
+    dp.register_message_handler(prompt_mess, state=None)  # подсказка
 
 
 
