@@ -1,4 +1,4 @@
-from keyboard import kb_start, exit_list_kbrd
+from keyboard import kb_start, manage_list_kbrd
 from aiogram.dispatcher import FSMContext
 from FSMachine import FSMStates
 from aiogram import types, Dispatcher
@@ -19,6 +19,13 @@ async def add_item(message: types.Message, state: FSMContext):
         msg_id_write(msg, id)  # записывает айди сообщения в БД
         await state.finish()  # выключение машины состояний
         await message.delete()  # удалить сообщение пользователя
+    elif message.text == 'удалить из списка':
+        await state.finish()  # выключение машины состояний
+        await message.delete()  # удалить сообщение пользователя
+        list_kb = view_list(id, list_name)
+        msg = await message.answer(f'Какой пункт нужно удалить?', reply_markup=list_kb)
+        msg_id_write(msg, id)  # записывает айди сообщения в БД
+        await FSMStates.del_item.set()  # включение состояния "удалить пункт в ПС"
     elif '"' in message.text:
         msg = await message.answer('Нельзя использовать кавычки! Введи без них')
         msg_id_write(msg, id)  # записывает айди сообщения в БД
@@ -35,10 +42,11 @@ async def add_item(message: types.Message, state: FSMContext):
         list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры
         msg = await message.answer(f'Вот и добавили "{message.text}" в список. Добавим ещё что-то?', reply_markup=list_kb)
         msg_id_write(msg, id)  # записывает айди сообщения в БД
-        msg2 = await message.answer(f'Что ещё нужно добавить в список?', reply_markup=exit_list_kbrd)  # клавиатура стартовая
+        msg2 = await message.answer(f'Что ещё нужно добавить в список?', reply_markup=manage_list_kbrd)
         msg_id_write(msg2, id)  # записывает айди сообщения в БД
         await message.delete()  # удалить сообщение пользователя
 
 
 def register_add_item_handlers(dp: Dispatcher):
     dp.register_message_handler(add_item, state=FSMStates.add_item)  # добавление пунктов в пользовательский список
+    dp.register_message_handler(add_item, state=FSMStates.del_item)  # добавление пунктов в пользовательский список

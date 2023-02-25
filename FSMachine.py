@@ -6,4 +6,4 @@ class FSMStates(StatesGroup):
     add_list = State()   # состояние "создать ПС"
     add_item = State()  # состояние "создать пункт в ПС"
     del_item = State()  # состояние "удалить пункт в ПС"
-    nothing = State()  # ничего не делать???
+
