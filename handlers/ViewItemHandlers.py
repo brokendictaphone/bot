@@ -1,7 +1,7 @@
 from aiogram import types, Dispatcher
 from create_bot import bot
 from FSMachine import FSMStates
-from keyboard import kb_start
+from keyboard import kb_start, exit_list_kbrd
 from funct import del_mess, msg_id_write, check_user_list, view_list
 import sqlite3 as sq
 
@@ -24,12 +24,13 @@ async def view_items_in_list(callback: types.CallbackQuery):  # просмотр
     if flag:  # если ПС не пуст
         list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры
         msg = await bot.send_message(callback.from_user.id, f'Список "{list_name}": ', reply_markup=list_kb)
-        await bot.send_message(callback.from_user.id, 'Напишите, что нужно добавить?', reply_markup=kb_start)  # клавиатура стартовая
-        await FSMStates.add_item.set() # состояние "создать пункт в ПС"
         msg_id_write(msg, id)  # записывает айди сообщения в БД
+        msg2 = await bot.send_message(callback.from_user.id, 'Напишите, что нужно добавить?', reply_markup=exit_list_kbrd)  # клавиатура стартовая
+        msg_id_write(msg2, id)  # записывает айди сообщения в БД
+        await FSMStates.add_item.set() # состояние "создать пункт в ПС"
     else:
         await callback.answer('Похоже, список пуст.', show_alert=True)
-        msg = await bot.send_message(callback.from_user.id, 'Напишите, что нужно добавить в список?', reply_markup=kb_start)
+        msg = await bot.send_message(callback.from_user.id, 'Напишите, что нужно добавить в список?', reply_markup=exit_list_kbrd)
         await FSMStates.add_item.set()  # включено состояние "создать пункт в ПС"
         msg_id_write(msg, id)  # записывает айди сообщения в БД
 

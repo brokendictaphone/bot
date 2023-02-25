@@ -62,8 +62,8 @@ async def command_start(message: types.Message):
     await message.delete()  # удалить сообщение пользователя
 
 ViewListHandlers.register_view_list_handlers(dp)  # просмотр пользовательских списков
-AddListsHandlers.register_AddLIst_handlers(dp)  # добавление пользовательских списков
 DelListHandlers.register_del_list_handlers(dp)  # удаление пользовательских списков
+AddListsHandlers.register_AddLIst_handlers(dp)  # добавление пользовательских списков
 ViewItemHandlers.register_view_item_handlers(dp)  # просмотр пунктов в ПС
 AddItemHandlers.register_add_item_handlers(dp)  # добавление пунктов в ПС
 #DelItemsHandlers.register_del_item_handlers(dp)  # удаление пунктов в ПС
