@@ -25,6 +25,19 @@ def msg_id_write(msg, id):
     data_base.close()  # закрытие ДБ
 
 
+def current_list_write(list_name, id):
+    """записывает название текущего списка в БД"""
+    data_base = sq.connect('ListBotBase2.db')
+    cur = data_base.cursor()
+    cur.execute(f"SELECT list_name FROM current_list WHERE user_id = {id} ")  # выбор значения
+    if cur.fetchone():
+        cur.execute(f'UPDATE current_list SET list_name = "{list_name}" WHERE user_id = {id}')  # !!!КАВЫЧКИ!!!
+    else:
+        cur.execute("""INSERT INTO current_list (user_id,list_name) VALUES(?,?)""", (id, list_name))
+    data_base.commit()  # подтверждение действий
+    data_base.close()  # закрытие ДБ
+
+
 def check_data_base(id):
     """проверяет, есть ли записи у пользователя в БД"""
     flag = False
@@ -84,7 +97,7 @@ def list_or_thing(id, check_name):
     LoTFl = False
     data_base = sq.connect('ListBotBase2.db')  # связь с БД
     cur = data_base.cursor()
-    res = cur.execute(f"SELECT DISTINCT list FROM lists WHERE user_id = {id}") # вывод данных из БД(выбрать всё из таблицы пользователи)
+    res = cur.execute(f"SELECT DISTINCT list FROM lists WHERE user_id = {id}")  # вывод данных из БД(выбрать всё из таблицы пользователи)
     for tpl in res.fetchall():
         if tpl[0] == check_name:
             LoTFl = True

@@ -14,7 +14,7 @@ async def add_item(message: types.Message, state: FSMContext):
     await del_mess(id)  # удаление предыдущего сообщения
     data_base = sq.connect('ListBotBase2.db')
     cur = data_base.cursor()
-    if message.text == 'выход из списка':
+    if message.text == 'выход из списка' or message.text == 'показать списки':
         msg = await message.answer(f'Что нужно сделать?', reply_markup=kb_start)
         msg_id_write(msg, id)  # записывает айди сообщения в БД
         await state.finish()  # выключение машины состояний
@@ -40,7 +40,8 @@ async def add_item(message: types.Message, state: FSMContext):
         data_base.commit()  # подтверждение действий
         await del_mess(id)  # удаление предыдущего сообщения
         list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры
-        msg = await message.answer(f'Вот и добавили "{message.text}" в список. Добавим ещё что-то?', reply_markup=list_kb)
+        msg = await message.answer(f'Вот и добавили "{message.text}" в список.'
+                                   f' Добавим ещё что-то?', reply_markup=list_kb)
         msg_id_write(msg, id)  # записывает айди сообщения в БД
         msg2 = await message.answer(f'Что ещё нужно добавить в список?', reply_markup=manage_list_kbrd)
         msg_id_write(msg2, id)  # записывает айди сообщения в БД
