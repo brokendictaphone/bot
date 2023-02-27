@@ -9,12 +9,11 @@ async def view_lists_button(message: types.Message):  # кнопка показ�
     id = message.chat.id
     await del_mess(id)  # удаление предыдущего сообщения
     flag = check_data_base(id)
-    # await state.finish()  # выключение машины состояний
     if flag:
         list_kb = view_user_lists(id)  # функция создает и возвращет списки пользователя в виде клавиатуры
         msg = await message.answer('Актуальные списки: ', reply_markup=list_kb)
         msg_id_write(msg, id)  # записывает айди сообщения в БД
-        msg = await message.answer('для обычной клавиатуры ', reply_markup=kb_start)
+        msg = await message.answer('что нужно сделать? ', reply_markup=kb_start)
         msg_id_write(msg, id)  # записывает айди сообщения в БД
         await message.delete()  # удалить сообщение пользователя
     else:

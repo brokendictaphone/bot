@@ -1,4 +1,4 @@
-from keyboard import kb_start, manage_list_kbrd
+from keyboard import kb_start, manage_list_kbrd, cancel_del_kbrd
 from aiogram.dispatcher import FSMContext
 from FSMachine import FSMStates
 from aiogram import types, Dispatcher
@@ -19,12 +19,23 @@ async def add_item(message: types.Message, state: FSMContext):
         msg_id_write(msg, id)  # записывает айди сообщения в БД
         await state.finish()  # выключение машины состояний
         await message.delete()  # удалить сообщение пользователя
-    elif message.text == 'удалить из списка':
+    elif message.text == 'отмена':
+        await message.delete()  # удалить сообщение пользователя
+        list_kb = view_list(id, list_name)
+        await state.finish()  # выключение машины состояний
+        msg = await message.answer(f'Отмена? Без проблем. Актуальный список: ', reply_markup=list_kb)
+        msg_id_write(msg, id)  # записывает айди сообщения в БД
+        msg1 = await message.answer(f'Что-то ещё нужно добавить?', reply_markup=manage_list_kbrd)
+        msg_id_write(msg1, id)  # записывает айди сообщения в БД
+        await FSMStates.add_item.set()  # состояние "создать пункт в ПС"
+    elif message.text == 'удалить пункт из списка':
         await state.finish()  # выключение машины состояний
         await message.delete()  # удалить сообщение пользователя
         list_kb = view_list(id, list_name)
         msg = await message.answer(f'Какой пункт нужно удалить?', reply_markup=list_kb)
         msg_id_write(msg, id)  # записывает айди сообщения в БД
+        msg1 = await message.answer(f'Чтобы отменить удаление - нажми кнопку: ', reply_markup=cancel_del_kbrd)
+        msg_id_write(msg1, id)  # записывает айди сообщения в БД
         await FSMStates.del_item.set()  # включение состояния "удалить пункт в ПС"
     elif '"' in message.text:
         msg = await message.answer('Нельзя использовать кавычки! Введи без них')
