@@ -3,7 +3,7 @@ from aiogram.dispatcher import FSMContext
 from FSMachine import FSMStates
 from aiogram import types, Dispatcher
 from create_bot import bot
-from keyboard import kb_start
+from keyboard import kb_start, cancel_del_kbrd
 from funct import del_mess, msg_id_write, check_lists_numb, view_user_lists
 import sqlite3 as sq
 
@@ -15,7 +15,9 @@ async def del_list_button(message: types.Message):  # кнопка 'удалит
     if list_len > 0:
         await FSMStates.delete_list.set()  # включено состояние "удалить ПС"
         list_kb = view_user_lists(id)
-        msg = await message.answer('Какой список следует удалить?', reply_markup=list_kb)
+        msg1 = await message.answer('Какой список следует удалить?', reply_markup=list_kb)
+        msg_id_write(msg1, id)  # записывает айди сообщения в БД
+        msg = await message.answer('Для отмены удаления нажмите кнопку', reply_markup=cancel_del_kbrd)
         msg_id_write(msg, id)  # записывает айди сообщения в БД
         await message.delete()  # удалить сообщение пользователя
     else:
@@ -23,6 +25,13 @@ async def del_list_button(message: types.Message):  # кнопка 'удалит
         msg_id_write(msg, id)  # записывает айди сообщения в БД
         await message.delete()  # удалить сообщение пользователя
 
+async def del_list_cancel(message: types.Message, state: FSMContext):  # кнопка 'отмена'
+    id = message.chat.id
+    await del_mess(id)  # удаление предыдущего сообщения
+    await state.finish()  # выключение машины состояний
+    msg = await message.answer('Отмена, так отмена.Что нужно сделать? ', reply_markup=kb_start)
+    msg_id_write(msg, id)  # записывает айди сообщения в БД
+    await message.delete()  # удалить сообщение пользователя
 
 async def del_list(callback: types.CallbackQuery, state: FSMContext):  # удаление пользовательского списка
     global list_name
@@ -42,4 +51,5 @@ async def del_list(callback: types.CallbackQuery, state: FSMContext):  # уда�
 
 def register_del_list_handlers(dp: Dispatcher):
     dp.register_message_handler(del_list_button, (Text(equals='удалить список')), state=None)  # удаление списка
+    dp.register_message_handler(del_list_cancel, (Text(equals='отмена')), state=FSMStates.delete_list) # отмена удаления списка
     dp.register_callback_query_handler(del_list, state=FSMStates.delete_list)  # просмотр пунктов пользовательского списка
