@@ -92,6 +92,16 @@ def check_user_list(id, list_name):
     return flag
 
 
+def item_number (id, list_name):
+    """вычисляет номер пункта в ПС"""
+    data_base = sq.connect('ListBotBase2.db')  # связь с БД
+    cur = data_base.cursor()
+    res = cur.execute("SELECT thing FROM lists WHERE user_id = ? AND list = ?", (id, list_name))  # вывод данных из БД(выбрать всё из таблицы пользователи
+    number = len(res.fetchall()) # если в списке есть хотя бы одна не пустая запись
+    number = str(number) + ". "
+    return number
+
+
 def list_or_thing(id, check_name):
     """проверяет, входит ли запись в пользовательские списки"""
     LoTFl = False

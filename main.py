@@ -49,7 +49,7 @@ DelListHandlers.register_del_list_handlers(dp)  # удаление пользо�
 AddListsHandlers.register_AddLIst_handlers(dp)  # добавление пользовательских списков
 ViewItemHandlers.register_view_item_handlers(dp)  # просмотр пунктов в ПС
 AddItemHandlers.register_add_item_handlers(dp)  # добавление пунктов в ПС
-DelItemsHandlers.register_del_item_handlers(dp)  # удаление пунктов в ПСgit
+DelItemsHandlers.register_del_item_handlers(dp)  # удаление пунктов в ПС
 
 
 executor.start_polling(dp, skip_updates=True, on_startup=on_startup)  # skip_updates - бот не будет отвечать на сообщения, которые были присланы,

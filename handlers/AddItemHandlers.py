@@ -2,7 +2,7 @@ from keyboard import kb_start, manage_list_kbrd, cancel_del_kbrd
 from aiogram.dispatcher import FSMContext
 from FSMachine import FSMStates
 from aiogram import types, Dispatcher
-from funct import del_mess, msg_id_write, view_list
+from funct import del_mess, msg_id_write, view_list, item_number
 import sqlite3 as sq
 
 
@@ -46,8 +46,10 @@ async def add_item(message: types.Message, state: FSMContext):
         msg_id_write(msg, id)  # записывает айди сообщения в БД
         await message.delete()  # удалить сообщение пользователя
     else:
+        number = item_number(id, list_name)  # определение номера пункта в ПС
+        item = number + message.text  # присвоение номера пункту в ПС
         cur.execute("""INSERT INTO lists VALUES(?,?,?)""",
-                    (id, list_name, message.text))  # добавление данных в список дел
+                    (id, list_name, item))  # добавление данных в ПС
         data_base.commit()  # подтверждение действий
         await del_mess(id)  # удаление предыдущего сообщения
         list_kb = view_list(id, list_name)  # функция создает пункты пользовательских списков в виде клавиатуры

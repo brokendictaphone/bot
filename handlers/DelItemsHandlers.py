@@ -8,13 +8,13 @@ import sqlite3 as sq
 
 async def del_item(callback: types.CallbackQuery):  # удаление пункта в списке
     id = callback.from_user.id  # посмотреть ID через коллбэки
-    list_name = callback.data
+    item_name = callback.data
     await del_mess(id)  # удаление предыдущего сообщения
     data_base = sq.connect('ListBotBase2.db')  # связь с БД
     cur = data_base.cursor()
     user_list_name = \
-    cur.execute("SELECT list FROM lists WHERE user_id = ? AND thing = ?", (id, list_name)).fetchone()[0]  # имя ПС
-    cur.execute(f'DELETE FROM lists WHERE thing = ? AND user_id = ?', (list_name, id))
+    cur.execute("SELECT list FROM lists WHERE user_id = ? AND thing = ?", (id, item_name )).fetchone()[0]  # имя ПС
+    cur.execute(f'DELETE FROM lists WHERE thing = ? AND user_id = ? AND list = ?', (item_name , id, user_list_name))
     data_base.commit()
     flag = check_thing_in_data_base(user_list_name, id)  # проверяет, есть ли пункты в ПС
     if flag:
